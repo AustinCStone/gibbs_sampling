@@ -78,15 +78,15 @@ def sample(parent_nodes_list):
 
 def clear_marks(name_to_node_map):
 	"""sets all marks in the network to false"""
-	for key, value in name_to_node_map.iteritems():
-		name_to_node_map[key].marked = False
+	for name, node in name_to_node_map.iteritems():
+		node.marked = False
 
 
 def is_valid_sample(name_to_node_map, name_to_clamped_map):
 	"""checks if the sample meets the criteria in the name_to_clamped_map.. this allows 
 	a very inefficient form of rejection sampling"""
-	for key, value in name_to_clamped_map.iteritems():
-		if name_to_node_map[key].state is not value:
+	for name, clamped_value in name_to_clamped_map.iteritems():
+		if name_to_node_map[name].state is not clamped_value:
 			return False
 	return True
 
@@ -113,10 +113,12 @@ def build_ancestral_sample_table(network, num_samples, name_to_clamped_map):
 	network = generate_network()
 	parent_nodes_list = network.parent_nodes_list
 	name_to_node_map = network.name_to_node_map
-	for i in range(num_samples):
+	successful_samples = 0
+	while successful_samples < num_samples:
 		sample(parent_nodes_list)
-		if (is_valid_sample(parent_nodes_list, name_to_clamped_map)):
+		if (is_valid_sample(name_to_node_map, name_to_clamped_map)):
 			put_sample_in_table(network.name_to_node_map, sample_table)
+			successful_samples+=1
 		clear_marks(name_to_node_map)
 	return sample_table
 

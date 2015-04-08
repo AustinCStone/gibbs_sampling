@@ -1,6 +1,8 @@
 import bayesian_network as b
 import random as r
 import functional as f
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Sample_table_container:
@@ -11,7 +13,9 @@ class Sample_table_container:
 	def compare_pdfs(self):
 		#why doesn't iterkeys give an array? it would be nice to be able to do iterkeys().sum()
 		total_gibbs_samples = float(sum(map(lambda value: value, self.gibbs_sample_table.itervalues())))
+		print 'total gibbs samples: ' + str(total_gibbs_samples) + '\n'
 		total_ancestral_samples = float(sum(map(lambda value: value, self.ancestral_sample_table.itervalues())))
+		print 'total ancestral samples: ' + str(total_ancestral_samples) + '\n'
 		frequency_table_gibbs = []
 		frequency_table_ancestral = []
 		for key, value in self.ancestral_sample_table.iteritems():
@@ -20,11 +24,55 @@ class Sample_table_container:
 		for key, value in self.gibbs_sample_table.iteritems():
 			frequency_table_gibbs.append([key, float(value)/total_gibbs_samples])
 
+		#stupid way of graphing results
 		sorted(frequency_table_gibbs, key=lambda entry: entry[0])
 		sorted(frequency_table_ancestral, key=lambda entry: entry[0])
-		print frequency_table_ancestral
-		print '\n\n\n\n\n\n'
-		print frequency_table_gibbs
+		i = 0
+		while(i<len(frequency_table_ancestral)):
+			end = min(len(frequency_table_ancestral), i+18)
+			graph(frequency_table_ancestral[i:end], frequency_table_gibbs[i:end])
+			i+=end
+
+def graph(frequency_table_ancestral, frequency_table_gibbs):
+	print frequency_table_gibbs
+	print frequency_table_ancestral
+	N = max(len(frequency_table_gibbs), len(frequency_table_ancestral))
+	gibbs = map(lambda entry: entry[1], frequency_table_gibbs)
+	ancestral = map(lambda entry: entry[1], frequency_table_ancestral)
+
+	ind = np.arange(N)  # the x locations for the groups
+	print ind
+	width = 0.2      # the width of the bars
+
+	fig, ax = plt.subplots()
+	rects1 = ax.bar(ind, gibbs, width, color='r')
+	rects2 = ax.bar(ind+width, ancestral, width, color='y')
+
+	# add some text for labels, title and axes ticks
+	ax.set_ylabel('Frequency')
+	ax.set_title('Sample Occurences')
+	ax.set_xticks(ind+width)
+
+	get_bin = lambda x, n: x >= 0 and str(bin(x))[2:].zfill(n) or "-" + str(bin(x))[3:].zfill(n)
+	x_labels = map(lambda entry: get_bin(entry[0], 7), frequency_table_ancestral)
+	ax.set_xticklabels( x_labels, rotation="vertical")
+
+	ax.legend( (rects1[0], rects2[0]), ('Gibbs', 'Ancestral') )
+
+	'''def autolabel(rects):
+	    # attach some text labels
+		for rect in rects:
+   			height = rect.get_height()
+    		ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%d'%int(height),
+            	ha='center', va='bottom')
+
+	autolabel(rects1)
+	autolabel(rects2)'''
+
+	plt.show()
+
+
+
 
 		
 
