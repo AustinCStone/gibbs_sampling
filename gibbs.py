@@ -1,5 +1,6 @@
 import bayesian_network as b
 import random as r
+import functional as f
 
 
 class Sample_table_container:
@@ -7,6 +8,25 @@ class Sample_table_container:
 		self.gibbs_sample_table = gibbs_sample_table
 		self.ancestral_sample_table = ancestral_sample_table
 
+	def compare_pdfs(self):
+		#why doesn't iterkeys give an array? it would be nice to be able to do iterkeys().sum()
+		total_gibbs_samples = float(sum(map(lambda value: value, self.gibbs_sample_table.itervalues())))
+		total_ancestral_samples = float(sum(map(lambda value: value, self.ancestral_sample_table.itervalues())))
+		frequency_table_gibbs = []
+		frequency_table_ancestral = []
+		for key, value in self.ancestral_sample_table.iteritems():
+			frequency_table_ancestral.append([key, float(value)/total_ancestral_samples])
+
+		for key, value in self.gibbs_sample_table.iteritems():
+			frequency_table_gibbs.append([key, float(value)/total_gibbs_samples])
+
+		sorted(frequency_table_gibbs, key=lambda entry: entry[0])
+		sorted(frequency_table_ancestral, key=lambda entry: entry[0])
+		print frequency_table_ancestral
+		print '\n\n\n\n\n\n'
+		print frequency_table_gibbs
+
+		
 
 def gibbs(name_to_node_map, name_to_clamped_map, num_burnin_samples, num_gibbs_samples):
 	"""Performs gibbs sampling"""

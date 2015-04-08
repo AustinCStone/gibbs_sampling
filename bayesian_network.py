@@ -85,8 +85,8 @@ def clear_marks(name_to_node_map):
 def is_valid_sample(name_to_node_map, name_to_clamped_map):
 	"""checks if the sample meets the criteria in the name_to_clamped_map.. this allows 
 	a very inefficient form of rejection sampling"""
-	for key, value in name_to_clamped_map:
-		if name_to_node_map[key] is not value:
+	for key, value in name_to_clamped_map.iteritems():
+		if name_to_node_map[key].state is not value:
 			return False
 	return True
 
