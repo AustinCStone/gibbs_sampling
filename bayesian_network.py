@@ -27,11 +27,20 @@ class Bayesian_node:
 
 
 def generate_network():#num_parents, num_leaves, approx_num_total_nodes, approx_connectivity):
-	"""Generates the network on page 362 on bishop... Too much work to generate random networks for now"""
+	"""Generates the network on page 362 on bishop... Too much work to generate random networks..."""
 	#lambda to collapse the list of parent's states into a binary string
 	get_parents_binary_string = lambda parents: f.foldl(lambda acc, element: acc<<1 | element.state, 0b0, parents)
 	#simply looks up the binary string formed from the parents in the p_map
 	p_up = lambda p_map, parents: p_map[get_parents_binary_string(parents)]
+	'''
+	#simple network for testing purposes
+	node1 = Bayesian_node(None, lambda: .4, None, 0)
+	node2_p_dict = {0b0:.2, 0b1:.5}
+	node2 = Bayesian_node(None, f.partial(p_up, node2_p_dict), [node1], 1)
+	node1.children = [node2]
+
+	return Network([node1], {0: node1, 1:node2})'''
+
 	node1 = Bayesian_node(None, lambda: .4, None, 0)
 	node2 = Bayesian_node(None, lambda: .7, None, 1)
 	node3 = Bayesian_node(None, lambda: .3, None, 2)

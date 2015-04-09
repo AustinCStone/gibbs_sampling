@@ -31,7 +31,7 @@ class Sample_table_container:
 		while(i<len(frequency_table_ancestral)):
 			end = min(len(frequency_table_ancestral), i+18)
 			graph(frequency_table_ancestral[i:end], frequency_table_gibbs[i:end])
-			i+=end
+			i+=18
 
 def graph(frequency_table_ancestral, frequency_table_gibbs):
 	print frequency_table_gibbs
@@ -72,10 +72,31 @@ def graph(frequency_table_ancestral, frequency_table_gibbs):
 	plt.show()
 
 
+def calculate_conditional_p(node_to_sample, name_to_node_map):
+	#This method might be a little confusing. All it is doing is calculating the probability 
+	#that the node_to_sample should be sampled with value 1 given the state of all the other nodes in the network. 
+	#The formula comes from page 382 of bishop, which is the obvious way to calculate the conditional distribution
+	
+	node_to_sample.state = 0b1 
+	p_node_is_1 = 1.0 #probability of the network if the node_to_sample is set to 1
+	original_state = node_to_sample.state
+	for node in name_to_node_map.itervalues():
+		if node.state is 0b1:
+			p_node_is_1 *= node.p_up(node.parents) if node.parents is not None else node.p_up()
+		else: #p_up is the probability the node is 1 given its parents, so we need to take 1.0 minus this value when the node is set to 0
+			p_node_is_1 *= 1.0-node.p_up(node.parents) if node.parents is not None else 1.0-node.p_up()
 
+	node_to_sample.state = 0b0
+	p_node_is_0 = 1.0 #probability of the network if the node_to_sample is set to 0
+	for name, node in name_to_node_map.iteritems(): #calculate p_node_is_1 with flipped state
+		if node.state is 0b1:
+			p_node_is_0 *= node.p_up(node.parents) if node.parents is not None else node.p_up()
+		else: 
+			p_node_is_0 *= 1.0-node.p_up(node.parents) if node.parents is not None else 1.0-node.p_up()
+
+	return p_node_is_1/(p_node_is_1+p_node_is_0)
 
 		
-
 def gibbs(name_to_node_map, name_to_clamped_map, num_burnin_samples, num_gibbs_samples):
 	"""Performs gibbs sampling"""
 	sample_table = {}
@@ -92,12 +113,13 @@ def gibbs(name_to_node_map, name_to_clamped_map, num_burnin_samples, num_gibbs_s
 			if not name_to_clamped_map.has_key(name): #don't touch clamped values
 				#sample this new variable in terms of all other variables
 				#this node's sample depends only on its parents 
-				p_up = node.p_up(node.parents) if node.parents is not None else node.p_up()
+				p_up = calculate_conditional_p(node, name_to_node_map)
 				node.state = 0b0 if r.random() > p_up else 0b1
 		if sample_num > num_burnin_samples:
 			b.put_sample_in_table(name_to_node_map, sample_table)
 
 	return sample_table
+
 
 
 def driver(num_burnin_samples, num_gibbs_samples, num_ancestral_samples, name_to_clamped_map):
